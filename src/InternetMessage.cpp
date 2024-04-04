@@ -10,14 +10,24 @@
 
 namespace {
 
-    constexpr const char* WHITESPACE = "\r\n\t";
+    /**
+     * These are the characters that are considered whitespace and
+     * should be stripped off by the StripMarginWhitespace() function.
+     * 
+     * The name of "WSP" was chosen to match the symbol name from
+     * RFC 2822 (https://tools/ieft.org/html/rfc2822) which refers
+     * to this specific character set.
+    */
+    const std::string WSP = " \t";
+
+
 
     /**
      * 
     */
    std::string StripMarginWhitespace(const std::string& s) {
-        const auto marginLeft = s.find_first_not_of(WHITESPACE);
-        const auto marginRight = s.find_last_not_of(WHITESPACE);
+        const auto marginLeft = s.find_first_not_of(WSP);
+        const auto marginRight = s.find_last_not_of(WSP);
         if (marginLeft == std::string::npos) {
             return "";
         } else {
