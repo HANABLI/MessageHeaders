@@ -57,6 +57,9 @@ namespace InternetMessage {
             if (lineTerminator == std::string::npos) {
                 break;
             }
+            if (lineTerminator - offset > 998) {
+                return false;
+            }
             if (lineTerminator == offset) {
                 offset += 2;
                 break;
@@ -69,6 +72,13 @@ namespace InternetMessage {
             HeaderName name;
             HeaderValue value;
             name = rawMessage.substr(offset, nameValueDelimiter - offset);
+            for (auto c: name) {
+                if (
+                    (c < 33) || (c >126)
+                ) {
+                    return false;
+                }
+            }
             value = StripMarginWhitespace(
                 rawMessage.substr(nameValueDelimiter + 1, lineTerminator - nameValueDelimiter - 1)
             );
@@ -76,6 +86,22 @@ namespace InternetMessage {
             offset = lineTerminator + 2;
         }
         impl_->body = rawMessage.substr(offset);
+        bool lastCharacterCR = false;
+        bool lastCharacterLF = false;
+        for (auto c: impl_->body) {
+            if (c == '\r') {
+                lastCharacterCR = true;
+            } else if (
+                (c == '\n') == !lastCharacterCR 
+            ) {
+                        return false;
+            } else {
+                lastCharacterCR = false;
+            }
+        }
+        if (lastCharacterCR) {
+            return false;
+        }
         return true;
     }
 
@@ -90,6 +116,15 @@ namespace InternetMessage {
             }
         }
         return false;
+    }
+
+    auto InternetMessage::GetHeaderValue(const HeaderName& headerName) const -> HeaderValue {
+        for (const auto& header: impl_->headers) {
+            if (header.name == headerName) {
+                return header.value;
+            }
+        }
+        return "";
     }
 
     std::string InternetMessage::GetBody() const {
