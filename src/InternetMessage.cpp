@@ -31,7 +31,7 @@ namespace {
         if (marginLeft == std::string::npos) {
             return "";
         } else {
-            return s.substr(marginLeft + 1, marginRight - marginLeft + 1);
+            return s.substr(marginLeft, marginRight - marginLeft + 1);
         }
    }
 }
@@ -92,8 +92,27 @@ namespace InternetMessage {
             value = StripMarginWhitespace(
                 rawMessage.substr(nameValueDelimiter + 1, lineTerminator - nameValueDelimiter - 1)
             );
-            impl_->headers.push_back({name, value});
             offset = lineTerminator + 2;
+            for(;;) {
+                const auto nextLineStart = lineTerminator + 2;
+                auto nextLineTerminator = rawMessage.find("\r\n", nextLineStart);
+                if (nextLineTerminator == std::string::npos) {
+                    break;
+                }
+                const auto nextLineLength = nextLineTerminator - nextLineStart;
+                if (
+                    (nextLineLength > 2)
+                    && (WSP.find(rawMessage[nextLineStart]) != std::string::npos)
+                ) {
+                    value += rawMessage.substr(nextLineStart, nextLineLength);
+                    offset = nextLineTerminator + 2;
+                    lineTerminator = nextLineTerminator;
+                } else {
+                    break;
+                }
+            }
+            value = StripMarginWhitespace(value);
+            impl_->headers.push_back({name, value});
         }
         impl_->body = rawMessage.substr(offset);
         bool lastCharacterCR = false;
