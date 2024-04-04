@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <sstream>
 
 
 namespace InternetMessage {
@@ -140,6 +141,16 @@ namespace InternetMessage {
         */
        std::string GetBody() const;
 
+        /**
+         * This method constructs and returns the raw string
+         * internet message based on the both headers and body 
+         * parts that have been collected by the object
+         * 
+         * @return 
+         *      The raw string internet message based on the both
+         *      headers and body parts is returned
+        */
+        std::string GenerateRawMessage() const;
 
        //private properties
     private:

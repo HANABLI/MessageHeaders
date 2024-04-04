@@ -96,4 +96,15 @@ namespace InternetMessage {
         return impl_->body;
     }
 
+    std::string InternetMessage::GenerateRawMessage() const {
+        std::ostringstream rawMessage;
+        for (const auto& header: impl_->headers) {
+            rawMessage << header.name << ": " << header.value << "\r\n";
+        }
+        rawMessage << "\r\n";
+        rawMessage << impl_->body;
+
+        return rawMessage.str();
+    }
+
 }
