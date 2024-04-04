@@ -1,0 +1,23 @@
+# CMackeLists.txt for InternetMessage
+#
+# © 2024 by Hatem Nabli
+
+cmake_minimum_required(VERSION 3.8)
+set(this InternetMessage)
+
+set(Headers
+    include/InternetMessage/InternetMessage.hpp
+)
+
+set(Sources 
+    src/InternetMessage.cpp
+)
+
+add_library(${this} STATIC ${Sources} ${Headers})
+set_target_properties(${this} PROPERTIES 
+    FOLDER Libraries
+)
+
+target_include_directories(${this} PUBLIC include)
+
+add_subdirectory(test)
