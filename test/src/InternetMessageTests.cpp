@@ -165,3 +165,16 @@ TEST(InternetLMessageTests, BodyWithLoneLF) {
         "Hello World! My payload\nincludes a trailling";
     ASSERT_FALSE(imf.ParseFromString(rawMessage));
 }
+
+TEST(InternetMessgeTests, FoldedHeaderValue) {
+    InternetMessage::InternetMessage imf;
+    const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
+        "Host: www.example.com\r\n"
+        "Accept-Language: en, mi\r\n"
+        "Subject: This\r\n"
+        " is a test\r\n"
+        "\r\n"
+        "Hello World! My payload\nincludes a trailling";
+    ASSERT_FALSE(imf.ParseFromString(rawMessage));
+    ASSERT_EQ("This is a test", imf.GetHeaderValue("Subject"));
+}
