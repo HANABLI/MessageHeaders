@@ -38,6 +38,82 @@ namespace {
             return s.substr(marginLeft, marginRight - marginLeft + 1);
         }
    }
+
+    /**
+     * This is the type of function that is used as the strategy to
+     * determine where to break a long line into two smaller lines.
+     * 
+     * @param[in] s
+     *      This is the string which we are considering breaking.
+     * 
+     * @param[in] offset
+     *      This is the offset into the given string of the part
+     *      that is under consideration for breaking. 
+     * 
+     * @return  
+     *      The offset in the string where the string should be divided
+     *      in two is returned
+     * 
+     * @note 
+     *      The given offset is returned if the string cannot be broken
+    */
+    typedef std::function <size_t(
+        const std::string& s, 
+        size_t offset
+        )> StringFoldingStrategy;
+
+    /**
+     * This method breaks up the given input line into multiple output lines,
+     * as needed, tp ensure that no output line is longer than the given
+     * line limit, including line terminators.
+     * 
+     * @param[in] line
+     *      This is the line to fold if necessary.
+     * @param[in] terminator
+     *      This is the character sequence that separates lines.
+     * @param[in] limit
+     *      This is the maximum number of characters allowed par line,
+     *      including the line terminator.
+     * @param[in] lineFoldingStrategy
+     *      This is the function to call that will determine
+     *      where (if anywhere) to break up the input line.
+     * @return
+     *      The output lines are returned.
+     * 
+     * @retval  
+     *      This is returned if the line could not be folded into
+     *      multiple lines.
+     */
+   std::vector< std::string > FoldHeaderLine( 
+        const std::string& line, 
+        const std::string& terminator, 
+        size_t limit,
+        StringFoldingStrategy lineFoldingStrategy
+    ) {
+        std::vector< std::string > output;
+        size_t breakOffset = 0;
+        size_t currentLineStart = 0;
+        while(breakOffset < line.length()) {
+            breakOffset = lineFoldingStrategy(line, currentLineStart);
+            if (breakOffset == currentLineStart) {
+                return {};
+            }
+            std::string part;
+            if (currentLineStart != 0) {
+                part = " ";
+            }
+            part += line.substr(currentLineStart, breakOffset - currentLineStart);
+            if (
+                (part.length() < terminator.length()) 
+                || (part.substr(part.length() - terminator.length()) != terminator)
+            ) {
+                part += terminator;
+            }
+            output.push_back(part);
+            currentLineStart = breakOffset + 1;
+        }
+        return output;
+   }
 }
 
 namespace MessageHeaders {
@@ -180,7 +256,34 @@ namespace MessageHeaders {
     std::string MessageHeaders::GenerateRawHeaders() const {
         std::ostringstream rawMessage;
         for (const auto& header: impl_->headers) {
-            rawMessage << header.name << ": " << header.value << "\r\n";
+            std::ostringstream lineBuffer;
+            lineBuffer << header.name << ": " << header.value << CRLF;
+            if (impl_->lineLengthLimit > 0) {
+                bool firstPart = true;
+                for (const auto& part: FoldHeaderLine(lineBuffer.str(), 
+                CRLF, impl_->lineLengthLimit, 
+                [this, &firstPart](const std::string& s, size_t offset) {
+                    if (s.length() - offset <= impl_->lineLengthLimit) {
+                        return s.length();
+                    }
+                    size_t lastBreakCandidate = offset;
+                    const auto reservedCharacters = 2 + (firstPart ? 0 : 1);
+                    for (size_t i = offset; i <= offset + impl_->lineLengthLimit - reservedCharacters; ++i) {
+                        if ((s[i] == ' ') || (s[i] == '\t')) {
+                            if (firstPart) {
+                                firstPart = false;
+                            } else {
+                                lastBreakCandidate = i;
+                            }
+                        }
+                    }
+                    return lastBreakCandidate;
+                })) {
+                    rawMessage << part;
+                }
+            } else {
+            rawMessage << lineBuffer.str();
+            }
         }
         rawMessage << CRLF;
         return rawMessage.str();

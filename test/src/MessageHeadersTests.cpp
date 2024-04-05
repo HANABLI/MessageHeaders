@@ -133,8 +133,17 @@ TEST(MessageHeadersTests, HeaderLineOver1000CharactersAllawedByDeafault) {
     ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
     ASSERT_EQ(headersValuesLongerThan1000Characters, headers.GetHeaderValue(testHeaderName));
 }
+TEST(MessageHeadersTests, GetValueOfPresentHeader) {
+    MessageHeaders::MessageHeaders headers;
+    const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
+        "Host: www.example.com\r\n"
+        "Accept-Language: en, mi\r\n"
+        "\r\n";
+    ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
+    ASSERT_EQ("www.example.com", headers.GetHeaderValue("Host"));
+}
 
-TEST(InternetMeassageTests, GetValueOfMissingHeader) {
+TEST(MessageHeadersTests, GetValueOfMissingHeader) {
     MessageHeaders::MessageHeaders headers;
     const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
         "Host: www.example.com\r\n"
@@ -144,7 +153,29 @@ TEST(InternetMeassageTests, GetValueOfMissingHeader) {
     ASSERT_EQ("", headers.GetHeaderValue("toto"));
 }
 
-TEST(InternetLMessageTests, HeaderWithNonAsciiCharacterIntheName) {
+TEST(MessageHeadersTests, SetHeaderAdd) {
+    MessageHeaders::MessageHeaders headers;
+    const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
+        "Host: www.example.com\r\n"
+        "Accept-Language: en, mi\r\n"
+        "\r\n";
+    ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
+    headers.SetHeader("TOTO", "titi");
+    ASSERT_EQ("titi", headers.GetHeaderValue("TOTO"));
+}
+
+TEST(MessageHeadersTests, SetHeaderModify) {
+    MessageHeaders::MessageHeaders headers;
+    const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
+        "Host: www.example.com\r\n"
+        "Accept-Language: en, mi\r\n"
+        "\r\n";
+    ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
+    headers.SetHeader("Host", "www.newExample.com");
+    ASSERT_EQ("www.newExample.com", headers.GetHeaderValue("Host"));
+}
+
+TEST(MessageHeadersTests, HeaderWithNonAsciiCharacterIntheName) {
     MessageHeaders::MessageHeaders headers;
     const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
         "Host: www.example.com\r\n"
@@ -154,7 +185,7 @@ TEST(InternetLMessageTests, HeaderWithNonAsciiCharacterIntheName) {
     ASSERT_FALSE(headers.ParseRawMessage(rawMessage));
 }
 
-TEST(MessageHeadersTests, FoldedHeaderValue) {
+TEST(MessageHeadersTests, UnfoldingHeaderValue) {
     MessageHeaders::MessageHeaders headers;
     const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
         "Host: www.example.com\r\n"
@@ -164,4 +195,41 @@ TEST(MessageHeadersTests, FoldedHeaderValue) {
         "\r\n";
     ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
     ASSERT_EQ("This is a test", headers.GetHeaderValue("Subject"));
+}
+
+TEST(MessageHeadersTests, FoldLineThatWouldExceedLimit) {
+    const std::string headerName = "X";
+    struct TestVector {
+        std::string headerValue;
+        std::vector< std::string > expectedLines;
+    };
+    std::vector< TestVector > testVectors {
+        {"Hello, World!",        {"X: Hello,", " World!",   ""              }},
+        {"This is even longer!", {"X: This is", " even", " longer!",   ""}},
+        {"aaadadazdadcvbfdfvdf", {                                 ""}}
+
+    };
+    size_t index = 0;
+    for (const auto& test: testVectors) {
+        MessageHeaders::MessageHeaders headers;
+        headers.SetLineLimit(12);
+        headers.SetHeader(headerName, test.headerValue);
+        const auto rawHeaders = headers.GenerateRawHeaders();
+        std::vector< std::string > actualLines;
+        size_t offset = 0;
+        while(offset < rawHeaders.length()) {
+            auto lineTerminator = rawHeaders.find("\r\n", offset);
+            if (lineTerminator == std::string::npos) {
+                break;
+            }
+            const auto line = rawHeaders.substr(
+                offset,
+                lineTerminator - offset
+            );
+            actualLines.push_back(line);
+            offset = lineTerminator + 2;
+        }
+        ASSERT_EQ(test.expectedLines, actualLines) << index;
+        ++index;
+    }
 }
