@@ -47,6 +47,12 @@ namespace MessageHeaders {
          * These are the headers of the internet message.
         */
         Headers headers;
+        /**
+         * This is the maximum number of characters, including
+         * the 2-characters CRLF line terminator, that should
+         * be allowed for a single header line.
+        */
+        size_t lineLengthLimit = 0;
 
     };
 
@@ -66,8 +72,10 @@ namespace MessageHeaders {
             if (lineTerminator == std::string::npos) {
                 break;
             }
-            if (lineTerminator - offset > 998) {
-                return false;
+            if (impl_->lineLengthLimit > 0) {
+                if (lineTerminator - offset + 2> impl_->lineLengthLimit - 2) {
+                    return false;
+                }
             }
             if (lineTerminator == offset) {
                 offset += 2;
@@ -154,4 +162,7 @@ namespace MessageHeaders {
         return rawMessage.str();
     }
 
+    void MessageHeaders::SetLineLimit(size_t lineLengthLimit) {
+        impl_->lineLengthLimit = lineLengthLimit;
+    }
 }

@@ -180,6 +180,16 @@ namespace MessageHeaders {
         */
         std::string GenerateRawHeaders() const;
 
+        /**
+         * This method sets a limit for the number of characters
+         * in any header line.
+         * 
+         * @param[in] newLineLengthLimit
+         *      This is the maximum number of characters, including
+         *      the 2-characters CRLF line terminator, that should
+         *      be allowed for a single header line.
+        */
+        void SetLineLimit(size_t lineLengthLimit);
        //private properties
     private:
         /**

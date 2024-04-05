@@ -100,11 +100,11 @@ TEST(MessageHeadersTests, HeadersLineAlmostTooLong) {
         "\r\n"
     );
     ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
-    ASSERT_EQ(longestPossiblePoggers, headers.GetHeaderValue(testHeaderName));
 }
 
 TEST(MessageHeadersTests, HeadersLineTooLong) {
     MessageHeaders::MessageHeaders headers;
+    headers.SetLineLimit(1000);
     const std::string testHeaderName("X-Poggers");
     const std::string testHeaderNameWithDelimiters = testHeaderName + ": ";
     const std::string longestPossiblePoggers(999 - testHeaderNameWithDelimiters.length(), 'X');
@@ -116,6 +116,22 @@ TEST(MessageHeadersTests, HeadersLineTooLong) {
         "\r\n"
     );
     ASSERT_FALSE(headers.ParseRawMessage(rawMessage));
+}
+
+TEST(MessageHeadersTests, HeaderLineOver1000CharactersAllawedByDeafault) {
+    MessageHeaders::MessageHeaders headers;
+    const std::string testHeaderName("X-Poggers");
+    const std::string testHeaderNameWithDelimiters = testHeaderName + ": ";
+    const std::string headersValuesLongerThan1000Characters(999 - testHeaderNameWithDelimiters.length(), 'X');
+    const std::string rawMessage = (
+        "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
+        "Host: www.example.com\r\n"
+        + testHeaderNameWithDelimiters + headersValuesLongerThan1000Characters + "\r\n"
+        "Accept-Language: en, mi\r\n"
+        "\r\n"
+    );
+    ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
+    ASSERT_EQ(headersValuesLongerThan1000Characters, headers.GetHeaderValue(testHeaderName));
 }
 
 TEST(InternetMeassageTests, GetValueOfMissingHeader) {
