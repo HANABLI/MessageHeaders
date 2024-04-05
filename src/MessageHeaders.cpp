@@ -1,12 +1,12 @@
 /**
- * @file InternetMessage.cpp
+ * @file MessageHeaders.cpp
  * 
- * This module containe the implementation of the InternetMessage::InternetMessage class.
+ * This module containe the implementation of the MessageHeaders::MessageHeaders class.
  * 
  * © 2024 by Hatem Nabli
 */
 
-#include<InternetMessage/InternetMessage.hpp>
+#include<MessageHeaders/MessageHeaders.hpp>
 
 namespace {
 
@@ -36,31 +36,30 @@ namespace {
    }
 }
 
-namespace InternetMessage {
+namespace MessageHeaders {
 
     /**
      * This contains the private properties of Uri instance.
     */
-    struct InternetMessage::Impl
+    struct MessageHeaders::Impl
     {
         /**
          * These are the headers of the internet message.
         */
         Headers headers;
 
-        /**
-         * This is the body of the message.
-        */
-        std::string body;
     };
 
-    InternetMessage::~InternetMessage() = default;
+    MessageHeaders::~MessageHeaders() = default;
 
-    InternetMessage::InternetMessage():impl_(new Impl) {
+    MessageHeaders::MessageHeaders():impl_(new Impl) {
 
     }
 
-    bool InternetMessage::ParseFromString(const std::string& rawMessage) {
+    bool MessageHeaders::ParseRawMessage(
+        const std::string& rawMessage,
+        size_t& bodyOffset 
+    ) {
         size_t offset = 0;
         while(offset < rawMessage.length()) {
             auto lineTerminator = rawMessage.find("\r\n", offset);
@@ -114,31 +113,20 @@ namespace InternetMessage {
             value = StripMarginWhitespace(value);
             impl_->headers.push_back({name, value});
         }
-        impl_->body = rawMessage.substr(offset);
-        bool lastCharacterCR = false;
-        bool lastCharacterLF = false;
-        for (auto c: impl_->body) {
-            if (c == '\r') {
-                lastCharacterCR = true;
-            } else if (
-                (c == '\n') == !lastCharacterCR 
-            ) {
-                        return false;
-            } else {
-                lastCharacterCR = false;
-            }
-        }
-        if (lastCharacterCR) {
-            return false;
-        }
+        bodyOffset = offset;
         return true;
     }
 
-    auto InternetMessage::GetHeaders() const -> Headers {
+    bool MessageHeaders::ParseRawMessage(const std::string& rawMessageString) {
+        size_t bodyOffset;
+        return ParseRawMessage(rawMessageString, bodyOffset);
+    }
+
+    auto MessageHeaders::GetAll() const -> Headers {
         return impl_->headers;
     }
 
-    bool InternetMessage::HasHeader(const HeaderName& name) const {
+    bool MessageHeaders::HasHeader(const HeaderName& name) const {
         for (const auto& header: impl_->headers) {
             if (header.name == name) {
                 return true;
@@ -147,7 +135,7 @@ namespace InternetMessage {
         return false;
     }
 
-    auto InternetMessage::GetHeaderValue(const HeaderName& headerName) const -> HeaderValue {
+    auto MessageHeaders::GetHeaderValue(const HeaderName& headerName) const -> HeaderValue {
         for (const auto& header: impl_->headers) {
             if (header.name == headerName) {
                 return header.value;
@@ -156,18 +144,13 @@ namespace InternetMessage {
         return "";
     }
 
-    std::string InternetMessage::GetBody() const {
-        return impl_->body;
-    }
 
-    std::string InternetMessage::GenerateRawMessage() const {
+    std::string MessageHeaders::GenerateRawHeaders() const {
         std::ostringstream rawMessage;
         for (const auto& header: impl_->headers) {
             rawMessage << header.name << ": " << header.value << "\r\n";
         }
         rawMessage << "\r\n";
-        rawMessage << impl_->body;
-
         return rawMessage.str();
     }
 

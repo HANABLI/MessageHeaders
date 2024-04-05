@@ -3,14 +3,14 @@
 # © 2024 by Hatem Nabli
 
 cmake_minimum_required(VERSION 3.8)
-set(this InternetMessage)
+set(this MessageHeaders)
 
 set(Headers
-    include/InternetMessage/InternetMessage.hpp
+    include/MessageHeaders/MessageHeaders.hpp
 )
 
 set(Sources 
-    src/InternetMessage.cpp
+    src/MessageHeaders.cpp
 )
 
 add_library(${this} STATIC ${Sources} ${Headers})

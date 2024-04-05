@@ -1,12 +1,12 @@
-# CMakeLists.txt for InternetMessageTests
+# CMakeLists.txt for MessageHeadersTests
 #
 # © 2024 by Hatem Nabli
 
 cmake_minimum_required(VERSION 3.8)
-set(this InternetMessageTests)
+set(this MessageHeadersTests)
 
 set(Sources 
-    src/InternetMessageTests.cpp
+    src/MessageHeadersTests.cpp
 )
 
 add_executable(${this} ${Sources})
@@ -18,7 +18,7 @@ target_include_directories(${this} PRIVATE ..)
 
 target_link_libraries(${this} PUBLIC
     gtest_main
-    InternetMessage
+    MessageHeaders
 )
 
 add_test(
