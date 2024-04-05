@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <functional>
 
 
 namespace MessageHeaders {
@@ -172,7 +173,17 @@ namespace MessageHeaders {
         */
         HeaderValue GetHeaderValue(const HeaderName& headerName) const;
 
-
+        /**
+         * This method add or modifie the header with the given name,
+         * to have the given one.
+         * 
+         * @param[in] name
+         *      This is the name of the header to add or replace.
+         * 
+         * @param[in] value
+         *      This is the value of the header to add or replace.
+        */
+        void SetHeader( const HeaderName& name, const HeaderValue& value);
 
         /**
          * This method constructs and returns the raw string
