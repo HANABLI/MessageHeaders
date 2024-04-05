@@ -41,6 +41,16 @@ namespace MessageHeaders {
     /**
      * This contains the private properties of Uri instance.
     */
+
+   MessageHeaders::Header::Header(
+        const HeaderName& newName,
+        const HeaderValue& newValue
+    )
+        : name(newName)
+        , value(newValue)
+    {
+    }
+
     struct MessageHeaders::Impl
     {
         /**

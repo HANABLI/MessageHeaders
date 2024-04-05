@@ -50,6 +50,11 @@ namespace MessageHeaders {
              * depends on the header name.
             */
             HeaderValue value;
+
+            Header(
+                const HeaderName& newName,
+                const HeaderValue& newValue
+            );
         };
 
         /**
