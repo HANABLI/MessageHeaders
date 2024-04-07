@@ -288,12 +288,15 @@ namespace MessageHeaders {
                 if (nextLineTerminator == std::string::npos) {
                     break;
                 }
-                const auto nextLineLength = nextLineTerminator - nextLineStart;
+                auto nextLineLength = nextLineTerminator - nextLineStart;
                 if (
                     (nextLineLength > 2)
                     && (WSP.find(rawMessage[nextLineStart]) != std::string::npos)
                 ) {
-                    value += rawMessage.substr(nextLineStart, nextLineLength);
+                    value += ' ';
+                    const auto firstNonWhiteSpaceInNextLine = rawMessage.find_first_not_of(WSP, nextLineStart);
+                    nextLineLength -= (firstNonWhiteSpaceInNextLine - nextLineStart);
+                    value += rawMessage.substr(firstNonWhiteSpaceInNextLine, nextLineLength);
                     offset = nextLineTerminator + 2;
                     lineTerminator = nextLineTerminator;
                 } else {

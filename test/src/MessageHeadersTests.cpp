@@ -187,12 +187,21 @@ TEST(MessageHeadersTests, HeaderWithNonAsciiCharacterIntheName) {
 
 TEST(MessageHeadersTests, UnfoldingHeaderValue) {
     MessageHeaders::MessageHeaders headers;
-    const std::string rawMessage = "User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
+    std::string rawMessage = ("User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
         "Host: www.example.com\r\n"
         "Accept-Language: en, mi\r\n"
         "Subject: This\r\n"
         " is a test\r\n"
-        "\r\n";
+        "\r\n");
+    ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
+    ASSERT_EQ("This is a test", headers.GetHeaderValue("Subject"));
+    headers = MessageHeaders::MessageHeaders();
+    rawMessage = ("User-Agent: curl/7.16.3 libcurl/7.163 OpenSSL/0.9.7l zlib/1.2.3\r\n"
+    "Host: www.example.com\r\n"
+    "Accept-Language: en, mi\r\n"
+    "Subject: This\r\n"
+    "    is a test\r\n"
+    "\r\n");
     ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
     ASSERT_EQ("This is a test", headers.GetHeaderValue("Subject"));
 }
