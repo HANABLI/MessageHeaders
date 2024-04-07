@@ -14,6 +14,7 @@
 #include <sstream>
 #include <ostream>
 #include <functional>
+#include <ctype.h>
 
 
 
@@ -40,11 +41,11 @@ namespace MessageHeaders {
         class HeaderName{
             // Public Methods
         public:
-            ~HeaderName() = default;
+            ~HeaderName() noexcept = default;
             HeaderName(const HeaderName& s) = default;
-            HeaderName(HeaderName&& s) = default;
-            HeaderName& operator=(const HeaderName& s) = default;
-            HeaderName& operator=(HeaderName&& s) = default;
+            HeaderName(HeaderName&& s) noexcept = default;
+            HeaderName& operator=(const HeaderName&) = default;
+            HeaderName& operator=(HeaderName&&) = default;
 
         public:
             /**
@@ -79,10 +80,8 @@ namespace MessageHeaders {
              * @return
              *      A reference to the object is returned.
             */
-             HeaderName& operator=(const std::string& s) {
-                name_ = s;
-                return *this;
-            }
+             HeaderName& operator=(const std::string& s);
+
             /**
              * This is the equality operator for the class.
              * 
@@ -270,6 +269,22 @@ namespace MessageHeaders {
         */
         HeaderValue GetHeaderValue(const HeaderName& headerName) const;
 
+        /**
+         * This method returns a collection of values for the header with the given
+         * name in the message.
+         * 
+         * @param[in] headerName
+         *      This is the name of the header whose values should be returned
+         * 
+         * @return
+         *      returns the values of the given header name.
+         * 
+         * @retval {}   
+         *      If there is no header with the given name in the message
+         *      then just an empty collection is returned.
+        */
+        std::vector< HeaderValue > GetHeaderMultiValues(const HeaderName& headerName) const;
+        
         /**
          * This method add or modifie the header with the given name,
          * to have the given one.

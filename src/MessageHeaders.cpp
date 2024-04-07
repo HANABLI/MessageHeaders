@@ -150,12 +150,25 @@ namespace MessageHeaders {
    ) {
         *os << name;
    }
-
+    
     MessageHeaders::HeaderName::HeaderName(const std::string& s) : name_(s) {}
+
+    MessageHeaders::HeaderName& MessageHeaders::HeaderName::operator=(const std::string& s) {
+                name_ = s;
+                return *this;
+    }
 
     bool MessageHeaders::HeaderName::operator==(const HeaderName& rhs) const 
     { 
-        return name_ == rhs.name_;
+        if (name_.length() != rhs.name_.length()) {
+            return false;
+        };
+        for (size_t i = 0; i < name_.length(); ++i) {
+            if ((tolower(name_[i])) != (tolower(rhs.name_[i]))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     auto MessageHeaders::HeaderName::begin() const 
@@ -240,6 +253,9 @@ namespace MessageHeaders {
 
     MessageHeaders::~MessageHeaders() = default;
 
+    MessageHeaders::MessageHeaders(MessageHeaders&&) = default;
+    MessageHeaders& MessageHeaders::operator=(MessageHeaders&&) = default;
+
     MessageHeaders::MessageHeaders():impl_(new Impl) {
 
     }
@@ -273,7 +289,7 @@ namespace MessageHeaders {
             name = rawMessage.substr(offset, nameValueDelimiter - offset);
             for (auto c: name) {
                 if (
-                    (c < 33) || (c >126)
+                    (c < 33) || (c > 126)
                 ) {
                     return false;
                 }
@@ -281,7 +297,7 @@ namespace MessageHeaders {
             value = StripMarginWhitespace(
                 rawMessage.substr(nameValueDelimiter + 1, lineTerminator - nameValueDelimiter - 1)
             );
-            offset = lineTerminator + 2;
+            offset = lineTerminator + CRLF.length();
             for(;;) {
                 const auto nextLineStart = lineTerminator + 2;
                 auto nextLineTerminator = rawMessage.find(CRLF, nextLineStart);
@@ -347,6 +363,15 @@ namespace MessageHeaders {
         return "";
     }
 
+    auto MessageHeaders::GetHeaderMultiValues(const HeaderName& headerName) const -> std::vector< HeaderValue > {
+        std::vector< HeaderValue > headerValues;
+        for (const auto& header: impl_->headers) {
+            if (header.name == headerName) {
+                headerValues.push_back(header.value);
+            }
+        }
+        return headerValues;
+    }
 
     std::string MessageHeaders::GenerateRawHeaders() const {
         std::ostringstream rawMessage;
