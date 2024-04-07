@@ -242,3 +242,49 @@ TEST(MessageHeadersTests, FoldLineThatWouldExceedLimit) {
         ++index;
     }
 }
+
+TEST(MessageHeadersTests, HeaderNamesShouldBeCaseInsensitive_Test) {
+    struct TestVector {
+        std::string headerName;
+        std::vector< std::string > shouldAlsoMatch;
+    };
+    std::vector< TestVector > testVectors {
+        {"Content-Type", {"content-type", "CONTENT-TYPE", "Content-type", "CoNtENt-TYpe"}},
+        {"ETag", {"etag", "ETAG", "Etag", "eTag", "etaG"}}         
+
+    };
+    size_t index = 0;
+    for (const auto& test: testVectors) {
+        MessageHeaders::MessageHeaders headers;
+        headers.SetHeader(test.headerName, "HeyGuys");
+        for (const auto& headerCase: test.shouldAlsoMatch) {
+            ASSERT_TRUE(headers.HasHeader(headerCase)) << index;
+            ++index;
+        }
+    }
+}
+
+TEST(MessageHeadersTests, GetHeaderMultipleValues) {
+    const std::string rawMessage = (
+        "Via: SIP/2.0/UDP server10.biloxi.com\r\n"
+         "   ;branch=z9hG4bKnashds8;received=192.0.2.3\r\n"
+      "Via: SIP/2.0/UDP bigbox3.site3.atlanta.com\r\n"
+         "   ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2\r\n"
+      "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+         "   ;branch=z9hG4bK776asdhds ;received=192.0.2.1\r\n"
+      "To: Bob <sip:bob@biloxi.com>;tag=a6c85cf\r\n"
+      "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+      "\r\n"
+    );
+    MessageHeaders::MessageHeaders headers;
+    ASSERT_TRUE(headers.ParseRawMessage(rawMessage));
+    ASSERT_EQ((std::vector< MessageHeaders::MessageHeaders::HeaderValue >{
+        "SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3",
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2",
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1"
+    }), headers.GetHeaderMultiValues("Via"));
+    ASSERT_EQ("Bob <sip:bob@biloxi.com>;tag=a6c85cf", headers.GetHeaderValue("To"));
+    ASSERT_EQ("Alice <sip:alice@atlanta.com>;tag=1928301774", headers.GetHeaderValue("From"));
+    //ASSERT_EQ((std::vector< MessageHeaders::MessageHeaders::HeaderValue >{"Alice <sip:alice@atlanta.com>;tag=1928301774"}), headers.GetHeaderMultiValues("From"));
+    //ASSERT_EQ((std::vector< MessageHeaders::MessageHeaders::HeaderValue >{}), headers.GetHeaderMultiValues("Toto"));
+}
