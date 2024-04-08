@@ -438,7 +438,18 @@ namespace MessageHeaders {
             }
         }
     }
-
+    void MessageHeaders::RemoveHeader(const HeaderName& headerName) {
+        for (
+            auto header = impl_->headers.begin();
+            header != impl_->headers.end();
+        ) {
+            if (header->name == headerName) {
+                header = impl_->headers.erase(header);
+            } else {
+                ++header;
+            }
+        }
+    }
     auto MessageHeaders::GetHeaderValue(const HeaderName& headerName) const -> HeaderValue {
         for (const auto& header: impl_->headers) {
             if (header.name == headerName) {
