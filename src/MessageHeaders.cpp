@@ -150,7 +150,7 @@ namespace MessageHeaders {
    ) {
         *os << name;
    }
-    
+
     MessageHeaders::HeaderName::HeaderName(const std::string& s) : name_(s) {}
 
     MessageHeaders::HeaderName& MessageHeaders::HeaderName::operator=(const std::string& s) {
@@ -344,14 +344,99 @@ namespace MessageHeaders {
         return false;
     }
 
-    void MessageHeaders::SetHeader( const HeaderName& name, const HeaderValue& value) {
-        for (auto& header: impl_->headers) {
-            if (header.name == name) {
-                header.value = value;
-                return;
+    void MessageHeaders::SetHeader( 
+        const HeaderName& name, 
+        const HeaderValue& value
+    ) {
+        bool haveSetValues = false;
+        for (
+            auto header = impl_->headers.begin();
+            header != impl_->headers.end();
+        ) {
+            if (header->name == name) {
+                if (haveSetValues) {
+                    header = impl_->headers.erase(header);
+                } else {
+                    header->value = value;
+                    ++header;
+                    haveSetValues = true;
+                }
+            } else {
+                ++header;
             }
         }
+        if (!haveSetValues) {
+            impl_->headers.emplace_back(name, value);
+        }
+    }
+
+    void MessageHeaders::SetHeader( 
+        const HeaderName& name, 
+        const std::vector< HeaderValue >& values, 
+        bool oneLine
+    ) {
+        if (values.empty()) {
+            return;
+        }
+        if (oneLine) {
+            bool isFirstValue = true;
+            std::string compositeValue;
+            for (const auto& value: values) {
+                if (isFirstValue) {
+                    isFirstValue = false;
+                } else {
+                    compositeValue += ',';
+                }
+                compositeValue += value;
+            }
+            SetHeader(name, compositeValue);
+        } else {
+            bool isFirstValue = true;
+            for (const auto& value: values) {
+                if (isFirstValue) {
+                    isFirstValue = false;
+                    SetHeader(name, value);
+                } else {
+                    AddHeader(name, value);
+                }
+            }
+        }
+    }
+
+    void MessageHeaders::AddHeader( 
+        const HeaderName& name, 
+        const HeaderValue& value
+    ) {
         impl_->headers.emplace_back(name, value);
+    }
+
+    void MessageHeaders::AddHeader( 
+        const HeaderName& name, 
+        const std::vector< HeaderValue >& values, 
+        bool oneLine
+    ) {
+        if (values.empty()) {
+            return;
+        }
+        if (oneLine) {
+            bool isFirstValue = true;
+            std::string compositeValue;
+            for (const auto& value: values) {
+                if (isFirstValue) {
+                    isFirstValue = false;
+
+                } else {
+                    compositeValue += ',';
+                }
+                compositeValue += value;
+            }
+            AddHeader(name, compositeValue);
+        } else {
+            bool isFirstValue = true;
+            for (const auto& value: values) {
+                    AddHeader(name, value);
+            }
+        }
     }
 
     auto MessageHeaders::GetHeaderValue(const HeaderName& headerName) const -> HeaderValue {

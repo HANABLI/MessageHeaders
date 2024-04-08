@@ -296,6 +296,51 @@ namespace MessageHeaders {
          *      This is the value of the header to add or replace.
         */
         void SetHeader( const HeaderName& name, const HeaderValue& value);
+        
+        /**
+         * This method add or modifie the header with the given name,
+         * to have the given values.
+         * 
+         * @param[in] name
+         *      This is the name of the header to add or replace.
+         * 
+         * @param[in] values
+         *      This is the collection of values of the header to add or replace.
+         * 
+         * @param[in] oneLine
+         *      This specifies whether or not to combine values into on header line, separated by colons.
+        */
+        void SetHeader( const HeaderName& name, const std::vector< HeaderValue >& values, bool oneLine);
+
+        /**
+         * This method add  the header with the given name,
+         * to have the given value.
+         * 
+         * @param[in] name
+         *      This is the name of the header to add.
+         * 
+         * @param[in] values
+         *      This is the value of the header to add.
+         * 
+        */
+       void AddHeader( const HeaderName& name, const HeaderValue& value);
+        
+        /**
+         * This method adds  the header with the given name,
+         * to have the given values.
+         * 
+         * @param[in] name
+         *      This is the name of the header to add.
+         * 
+         * @param[in] values
+         *      This is the values of the header to add.
+         * 
+        */
+       void AddHeader( 
+            const HeaderName& name, 
+            const std::vector< HeaderValue >& values, 
+            bool oneLine
+        );
 
         /**
          * This method constructs and returns the raw string
