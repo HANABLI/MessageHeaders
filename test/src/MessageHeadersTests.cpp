@@ -285,6 +285,101 @@ TEST(MessageHeadersTests, GetHeaderMultipleValues) {
     }), headers.GetHeaderMultiValues("Via"));
     ASSERT_EQ("Bob <sip:bob@biloxi.com>;tag=a6c85cf", headers.GetHeaderValue("To"));
     ASSERT_EQ("Alice <sip:alice@atlanta.com>;tag=1928301774", headers.GetHeaderValue("From"));
-    //ASSERT_EQ((std::vector< MessageHeaders::MessageHeaders::HeaderValue >{"Alice <sip:alice@atlanta.com>;tag=1928301774"}), headers.GetHeaderMultiValues("From"));
-    //ASSERT_EQ((std::vector< MessageHeaders::MessageHeaders::HeaderValue >{}), headers.GetHeaderMultiValues("Toto"));
+    ASSERT_EQ((std::vector< MessageHeaders::MessageHeaders::HeaderValue >{"Alice <sip:alice@atlanta.com>;tag=1928301774"}), headers.GetHeaderMultiValues("From"));
+    ASSERT_EQ((std::vector< MessageHeaders::MessageHeaders::HeaderValue >{}), headers.GetHeaderMultiValues("Toto"));
+}
+
+TEST(MessageHeadersTests, SetHeaderMultipleValues_Test) {
+    std::vector< MessageHeaders::MessageHeaders::HeaderValue > via{
+        "SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3",
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2",
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1"
+    };
+    std::vector< MessageHeaders::MessageHeaders::HeaderValue > to{
+        "Bob <sip:bob@biloxi.com>;tag=a6c85cf"
+    };
+    MessageHeaders::MessageHeaders headers;
+    headers.SetHeader("Via", via, true);
+    headers.SetHeader("To", to, true);
+    headers.SetHeader("FeelsBad", {}, true);
+    ASSERT_EQ("Via: SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3,"
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2,"
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1\r\n"
+        "To: Bob <sip:bob@biloxi.com>;tag=a6c85cf\r\n"
+        "\r\n", headers.GenerateRawHeaders());
+    headers = MessageHeaders::MessageHeaders();
+    headers.SetHeader("Via", via, false);
+    headers.SetHeader("To", to, false);
+    headers.SetHeader("FeelsBad", {}, false);
+    ASSERT_EQ(
+        "Via: SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3\r\n"
+        "Via: SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2\r\n"
+        "Via: SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1\r\n"
+        "To: Bob <sip:bob@biloxi.com>;tag=a6c85cf\r\n"
+        "\r\n", 
+        headers.GenerateRawHeaders()
+    );
+}
+
+TEST(MessageHeadersTests, setHeaderShouldReplaceAllPreviousValues) {
+    std::vector< MessageHeaders::MessageHeaders::HeaderValue > via{
+        "SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3",
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2",
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1"
+    };
+    std::vector< MessageHeaders::MessageHeaders::HeaderValue > to{
+        "Bob <sip:bob@biloxi.com>;tag=a6c85cf"
+    };
+    MessageHeaders::MessageHeaders headers;
+    headers.SetHeader("Via", via, true);
+    headers.SetHeader("To", to, true);
+    headers.SetHeader("FeelsBad", {}, true);
+    headers.SetHeader("From", "Alice <sip:alice@atlanta.com>;tag=185468747");
+    ASSERT_EQ("Via: SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3,"
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2,"
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1\r\n"
+        "To: Bob <sip:bob@biloxi.com>;tag=a6c85cf\r\n"
+        "From: Alice <sip:alice@atlanta.com>;tag=185468747\r\n"
+        "\r\n", headers.GenerateRawHeaders());
+    headers.SetHeader("Via", "Kappa");
+    ASSERT_EQ(
+        "Via: Kappa\r\n"
+        "To: Bob <sip:bob@biloxi.com>;tag=a6c85cf\r\n"
+        "From: Alice <sip:alice@atlanta.com>;tag=185468747\r\n"
+        "\r\n", headers.GenerateRawHeaders());
+    
+}
+
+TEST(MessageHeadersTests, addHeader_Test) {
+    std::vector< MessageHeaders::MessageHeaders::HeaderValue > via{
+        "SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3",
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2",
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1"
+    };
+    std::vector< MessageHeaders::MessageHeaders::HeaderValue > to{
+        "Bob <sip:bob@biloxi.com>;tag=a6c85cf"
+    };
+    MessageHeaders::MessageHeaders headers;
+    headers.SetHeader("Via", via, true);
+    headers.SetHeader("To", to, true);
+    headers.SetHeader("FeelsBad", {}, true);
+    headers.AddHeader("From", "Alice <sip:alice@atlanta.com>;tag=185468747");
+    ASSERT_EQ("Via: SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3,"
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2,"
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1\r\n"
+        "To: Bob <sip:bob@biloxi.com>;tag=a6c85cf\r\n"
+        "From: Alice <sip:alice@atlanta.com>;tag=185468747\r\n"
+        "\r\n", headers.GenerateRawHeaders());
+    headers.AddHeader("Coucou", "Kappa");
+    headers.AddHeader("To", {"tototo"}, false);
+    ASSERT_EQ(
+        "Via: SIP/2.0/UDP server10.biloxi.com ;branch=z9hG4bKnashds8;received=192.0.2.3,"
+        "SIP/2.0/UDP bigbox3.site3.atlanta.com ;branch=z9hG4bK77ef4c2312983.1;received=192.0.2.2,"
+        "SIP/2.0/UDP pc33.atlanta.com ;branch=z9hG4bK776asdhds ;received=192.0.2.1\r\n"
+        "To: Bob <sip:bob@biloxi.com>;tag=a6c85cf\r\n"
+        "From: Alice <sip:alice@atlanta.com>;tag=185468747\r\n"
+        "Coucou: Kappa\r\n"
+        "To: tototo\r\n"
+        "\r\n", headers.GenerateRawHeaders());
+    
 }
