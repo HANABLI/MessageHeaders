@@ -297,14 +297,23 @@ namespace MessageHeaders {
             value = StripMarginWhitespace(
                 rawMessage.substr(nameValueDelimiter + 1, lineTerminator - nameValueDelimiter - 1)
             );
+            // Look ahead in the raw message and perform
+            // line unfolding if we see any lines that begin with whitespace.
             offset = lineTerminator + CRLF.length();
             for(;;) {
-                const auto nextLineStart = lineTerminator + 2;
+                // Find where the next line begins.
+                const auto nextLineStart = lineTerminator + CRLF.length();
+                // Find where the next line ends.
                 auto nextLineTerminator = rawMessage.find(CRLF, nextLineStart);
                 if (nextLineTerminator == std::string::npos) {
-                    break;
+                    return false;
                 }
                 auto nextLineLength = nextLineTerminator - nextLineStart;
+                // If the next line begins with whitespace, unfold the line
+                // - Append a single whitespace to the header value.
+                // - Remove leading whitespace from the next line.
+                // - Concatenate the rest of the next line to the header value.
+                // - Move to the line following the next line.
                 if (
                     (nextLineLength > 2)
                     && (WSP.find(rawMessage[nextLineStart]) != std::string::npos)
@@ -319,6 +328,8 @@ namespace MessageHeaders {
                     break;
                 }
             }
+            // Remove any whitespace that might be at te beginning
+            // or end of the header value, and then store the header.
             value = StripMarginWhitespace(value);
             impl_->headers.push_back({name, value});
         }
