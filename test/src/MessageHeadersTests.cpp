@@ -413,3 +413,13 @@ TEST(MessageHeadersTests, removeHeader_Test) {
         "\r\n", headers.GenerateRawHeaders()
     );
 }
+
+TEST(MessageHeadersTests, MessageHeadersTests_EmptyMessage_Test) {
+    MessageHeaders::MessageHeaders headers;
+    ASSERT_FALSE(headers.ParseRawMessage(""));
+}
+
+TEST(MessageHeadersTests, MessageHeadersTests_TruncateHeader_Test) {
+    MessageHeaders::MessageHeaders headers;
+    ASSERT_FALSE(headers.ParseRawMessage("User-Agent: curl"));
+}
