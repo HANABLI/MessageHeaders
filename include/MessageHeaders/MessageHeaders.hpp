@@ -35,10 +35,34 @@ namespace MessageHeaders {
     class MessageHeaders {
 
     public:
+
+        /**
+         * These are the different validity states 
+         * that a message header can have.
+         */
+        enum class Validity {
+
+            /**
+             * headers parsed successfully.
+             */
+            Valid, 
+            /**
+             * bad headers but it may be possible to parse valid headers 
+             * in the same stream when bad headers were found
+             */
+            InvalidRecoverable, 
+            /**
+             * bad headers and isn't possible to parse valid headers 
+             * in the same stream when bad headers were found
+             */
+            InvalidUnrecoverable 
+
+        };
         /**
          * This is how we handle the name of an Message header.
         */
         class HeaderName{
+
             // Public Methods
         public:
             ~HeaderName() noexcept = default;
@@ -213,9 +237,9 @@ namespace MessageHeaders {
         *       whether or not the Message was parsed successfully 
         *       is returned.
        */
-       bool ParseRawMessage(const std::string& rawMessageString, size_t& bodyOffset);
+       Validity ParseRawMessage(const std::string& rawMessageString, size_t& bodyOffset);
 
-             /**
+        /**
         * This method build the Message by determining the headers 
         * parts from the elements parsed from the given string
         * rendering of an Message.
@@ -227,7 +251,8 @@ namespace MessageHeaders {
         *       whether or not the Message was parsed successfully 
         *       is returned.
        */
-       bool ParseRawMessage(const std::string& rawMessageString);
+       Validity ParseRawMessage(const std::string& rawMessageString);
+
 
         /**
          * This method returns the collection of Headers elements of the Message.
@@ -437,6 +462,21 @@ namespace MessageHeaders {
         const MessageHeaders::HeaderName& name,
         std::ostream* os
    );
+
+       /**
+     * This is a support function for googleTest to print out
+     * values of the Server::Request::Validity class.
+     * 
+     * @param[in] validity
+     *      This is the validity to print out.
+     * 
+     * @param[in] os
+     *      This is a pointer to the stream to wish to print the validity.
+     */
+    void PrintTo(
+        const MessageHeaders::Validity& validity,
+        std::ostream* os
+    );
 }
 
 #endif /* MESSAGE_HEADERS_HPP */

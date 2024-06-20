@@ -213,6 +213,12 @@ namespace MessageHeaders {
         size_t lineLengthLimit = 0;
 
         /**
+         * this is an indication of the validity of the
+         * headers and the stream from which the headers were parsed.
+         */
+        Validity validity = Validity::Valid;
+
+        /**
          * This function returns a string splitting strategy 
          * function object which can be used once to foald a 
          * header line.
@@ -260,29 +266,37 @@ namespace MessageHeaders {
 
     }
 
-    bool MessageHeaders::ParseRawMessage(
+    auto MessageHeaders::ParseRawMessage(
         const std::string& rawMessage,
         size_t& bodyOffset 
-    ) {
+    ) -> Validity {
         size_t offset = 0;
         while(offset < rawMessage.length()) {
             auto lineTerminator = rawMessage.find(CRLF, offset);
             if (lineTerminator == std::string::npos) {
+                if (impl_->lineLengthLimit > 0) {
+                    const auto unterminatedLineLength = rawMessage.length() - offset ;
+                    if (unterminatedLineLength + 2 > impl_->lineLengthLimit) {
+                        return Validity::InvalidUnrecoverable;
+                    }
+                }
                 break;
             }
+
             if (impl_->lineLengthLimit > 0) {
-                if (lineTerminator - offset + 2> impl_->lineLengthLimit - 2) {
-                    return false;
+                if (lineTerminator - offset + CRLF.length() > impl_->lineLengthLimit) {
+                    return Validity::InvalidUnrecoverable;
                 }
             }
+
             if (lineTerminator == offset) {
-                offset += 2;
+                offset += CRLF.length();
                 break;
             }
 
             auto nameValueDelimiter = rawMessage.find(':', offset);
             if (nameValueDelimiter == std::string::npos) {
-                return false;
+                return Validity::InvalidUnrecoverable;
             }
             HeaderName name;
             HeaderValue value;
@@ -291,7 +305,7 @@ namespace MessageHeaders {
                 if (
                     (c < 33) || (c > 126)
                 ) {
-                    return false;
+                    return Validity::InvalidUnrecoverable;;
                 }
             }
             value = StripMarginWhitespace(
@@ -306,7 +320,8 @@ namespace MessageHeaders {
                 // Find where the next line ends.
                 auto nextLineTerminator = rawMessage.find(CRLF, nextLineStart);
                 if (nextLineTerminator == std::string::npos) {
-                    return false;
+                    
+                    return Validity::InvalidUnrecoverable;
                 }
                 auto nextLineLength = nextLineTerminator - nextLineStart;
                 // If the next line begins with whitespace, unfold the line
@@ -334,13 +349,13 @@ namespace MessageHeaders {
             impl_->headers.push_back({name, value});
         }
         if (offset == 0) {
-            return false;
+            return Validity::InvalidRecoverable;
         }
         bodyOffset = offset;
-        return true;
+        return Validity::Valid;
     }
 
-    bool MessageHeaders::ParseRawMessage(const std::string& rawMessageString) {
+    auto MessageHeaders::ParseRawMessage(const std::string& rawMessageString) -> Validity{
         size_t bodyOffset;
         return ParseRawMessage(rawMessageString, bodyOffset);
     }
@@ -503,5 +518,25 @@ namespace MessageHeaders {
 
     void MessageHeaders::SetLineLimit(size_t lineLengthLimit) {
         impl_->lineLengthLimit = lineLengthLimit;
+    }
+
+        void PrintTo(
+        const MessageHeaders::Validity& validity,
+        std::ostream* os
+    ) {
+        switch (validity) {
+            case MessageHeaders::Validity::Valid: {
+                *os << "VALID";
+            } break;
+            case MessageHeaders::Validity::InvalidRecoverable: {
+                *os << "INVALID (Recoverable)";
+            } break;
+            case MessageHeaders::Validity::InvalidUnrecoverable: {
+                *os << "INVALID (Unrecoverable)";
+            } break;
+            default: {
+                *os << "???";
+            }
+        }
     }
 }
