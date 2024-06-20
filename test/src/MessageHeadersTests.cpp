@@ -193,7 +193,7 @@ TEST(MessageHeadersTests, HeaderWithNonPermittedCharacterIntheName) {
         "Feels Bad: It's really Bad"
         "Accept-Language: en, mi\r\n"
         "\r\n";
-    ASSERT_EQ(MessageHeaders::MessageHeaders::Validity::InvalidUnrecoverable, headers.ParseRawMessage(rawMessage));
+    ASSERT_EQ(MessageHeaders::MessageHeaders::Validity::InvalidRecoverable, headers.ParseRawMessage(rawMessage));
 }
 
 TEST(MessageHeadersTests, UnfoldingHeaderValue) {

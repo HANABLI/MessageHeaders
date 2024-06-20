@@ -305,7 +305,7 @@ namespace MessageHeaders {
                 if (
                     (c < 33) || (c > 126)
                 ) {
-                    return Validity::InvalidUnrecoverable;;
+                    return Validity::InvalidRecoverable;;
                 }
             }
             value = StripMarginWhitespace(
