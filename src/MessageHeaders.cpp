@@ -349,7 +349,7 @@ namespace MessageHeaders {
             impl_->headers.push_back({name, value});
         }
         if (offset == 0) {
-            return Validity::InvalidRecoverable;
+            return Validity::ValidIncomplete;
         }
         bodyOffset = offset;
         return Validity::Valid;
@@ -527,6 +527,9 @@ namespace MessageHeaders {
         switch (validity) {
             case MessageHeaders::Validity::Valid: {
                 *os << "VALID";
+            } break;
+            case MessageHeaders::Validity::ValidIncomplete: {
+                *os << "VALID (Incomplete)";
             } break;
             case MessageHeaders::Validity::InvalidRecoverable: {
                 *os << "INVALID (Recoverable)";

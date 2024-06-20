@@ -55,7 +55,13 @@ namespace MessageHeaders {
              * bad headers and isn't possible to parse valid headers 
              * in the same stream when bad headers were found
              */
-            InvalidUnrecoverable 
+            InvalidUnrecoverable,
+
+            /**
+             * good headers but ran out of data early
+             * try parsing again whene more data is available.
+             */
+            ValidIncomplete
 
         };
         /**
