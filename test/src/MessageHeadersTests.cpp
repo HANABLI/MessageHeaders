@@ -193,7 +193,7 @@ TEST(MessageHeadersTests, HeaderWithNonPermittedCharacterIntheName) {
         "Feels Bad: It's really Bad"
         "Accept-Language: en, mi\r\n"
         "\r\n";
-    ASSERT_EQ(MessageHeaders::MessageHeaders::Validity::ValidIncomplete, headers.ParseRawMessage(rawMessage));
+    ASSERT_EQ(MessageHeaders::MessageHeaders::Validity::InvalidRecoverable, headers.ParseRawMessage(rawMessage));
 }
 
 TEST(MessageHeadersTests, UnfoldingHeaderValue) {
@@ -433,4 +433,9 @@ TEST(MessageHeadersTests, MessageHeadersTests_EmptyMessage_Test) {
 TEST(MessageHeadersTests, MessageHeadersTests_TruncateHeader_Test) {
     MessageHeaders::MessageHeaders headers;
     ASSERT_EQ(MessageHeaders::MessageHeaders::Validity::ValidIncomplete, headers.ParseRawMessage("User-Agent: curl"));
+}
+
+TEST(MessageHeadersTests, MessageHeadersTests_NonTruncateHeader_Test) {
+    MessageHeaders::MessageHeaders headers;
+    ASSERT_EQ(MessageHeaders::MessageHeaders::Validity::ValidIncomplete, headers.ParseRawMessage("User-Agent: curl\r\n"));
 }

@@ -321,7 +321,7 @@ namespace MessageHeaders {
                 auto nextLineTerminator = rawMessage.find(CRLF, nextLineStart);
                 if (nextLineTerminator == std::string::npos) {
                     
-                    return Validity::InvalidUnrecoverable;
+                    return Validity::ValidIncomplete;
                 }
                 auto nextLineLength = nextLineTerminator - nextLineStart;
                 // If the next line begins with whitespace, unfold the line
