@@ -270,6 +270,7 @@ namespace MessageHeaders {
         const std::string& rawMessage,
         size_t& bodyOffset 
     ) -> Validity {
+        bodyOffset = 0;
         size_t offset = 0;
         while(offset < rawMessage.length()) {
             auto lineTerminator = rawMessage.find(CRLF, offset);
@@ -348,10 +349,11 @@ namespace MessageHeaders {
             value = StripMarginWhitespace(value);
             impl_->headers.push_back({name, value});
         }
+        bodyOffset = offset;
         if (offset == 0) {
             return Validity::ValidIncomplete;
         }
-        bodyOffset = offset;
+        
         return Validity::Valid;
     }
 
