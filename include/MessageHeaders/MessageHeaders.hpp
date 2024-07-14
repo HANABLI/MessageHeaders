@@ -37,32 +37,25 @@ namespace MessageHeaders {
     public:
 
         /**
-         * These are the different validity states 
+         * These are the different states 
          * that a message header can have.
          */
-        enum class Validity {
+        enum class State {
 
             /**
              * headers parsed successfully.
              */
-            Valid, 
+            Incomplete, 
             /**
              * bad headers but it may be possible to parse valid headers 
              * in the same stream when bad headers were found
              */
-            InvalidRecoverable, 
-            /**
-             * bad headers and isn't possible to parse valid headers 
-             * in the same stream when bad headers were found
-             */
-            InvalidUnrecoverable,
+            Complete,
 
             /**
-             * good headers but ran out of data early
-             * try parsing again whene more data is available.
+             * Unrecoverable error, rejected input.
              */
-            ValidIncomplete
-
+            Error
         };
         /**
          * This is how we handle the name of an Message header.
@@ -243,7 +236,7 @@ namespace MessageHeaders {
         *       whether or not the Message was parsed successfully 
         *       is returned.
        */
-       Validity ParseRawMessage(const std::string& rawMessageString, size_t& bodyOffset);
+       State ParseRawMessage(const std::string& rawMessageString, size_t& bodyOffset);
 
         /**
         * This method build the Message by determining the headers 
@@ -257,7 +250,7 @@ namespace MessageHeaders {
         *       whether or not the Message was parsed successfully 
         *       is returned.
        */
-       Validity ParseRawMessage(const std::string& rawMessageString);
+       State ParseRawMessage(const std::string& rawMessageString);
 
 
         /**
@@ -404,6 +397,13 @@ namespace MessageHeaders {
          *      be allowed for a single header line.
         */
         void SetLineLimit(size_t lineLengthLimit);
+
+        /**
+         * This method return an indication of whether or not the headers
+         * constructed have all been valid.
+         */
+        bool IsValid() const;
+
        //private properties
     private:
         /**
@@ -471,7 +471,7 @@ namespace MessageHeaders {
 
        /**
      * This is a support function for googleTest to print out
-     * values of the Server::Request::Validity class.
+     * values of the Server::Request::State class.
      * 
      * @param[in] validity
      *      This is the validity to print out.
@@ -480,7 +480,7 @@ namespace MessageHeaders {
      *      This is a pointer to the stream to wish to print the validity.
      */
     void PrintTo(
-        const MessageHeaders::Validity& validity,
+        const MessageHeaders::State& validity,
         std::ostream* os
     );
 }
