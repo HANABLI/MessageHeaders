@@ -9,15 +9,19 @@ set(Headers
     include/MessageHeaders/MessageHeaders.hpp
 )
 
-set(Sources 
+set(Sources
     src/MessageHeaders.cpp
 )
 
 add_library(${this} STATIC ${Sources} ${Headers})
-set_target_properties(${this} PROPERTIES 
+set_target_properties(${this} PROPERTIES
     FOLDER Libraries
 )
 
 target_include_directories(${this} PUBLIC include)
+
+target_link_libraries(${this} PUBLIC
+    StringUtils
+)
 
 add_subdirectory(test)
