@@ -29,18 +29,14 @@ namespace
     /**
      *
      */
-    std::string StripMarginWhitespace(const std::string& s)
-    {
+    std::string StripMarginWhitespace(const std::string& s) {
         const auto marginLeft = s.find_first_not_of(WSP);
         const auto marginRight = s.find_last_not_of(WSP);
         if (marginLeft == std::string::npos)
         {
             return "";
-        }
-        else
-        {
-            return s.substr(marginLeft, marginRight - marginLeft + 1);
-        }
+        } else
+        { return s.substr(marginLeft, marginRight - marginLeft + 1); }
     }
 
     /**
@@ -95,8 +91,7 @@ namespace
      */
     std::vector<std::string> SplitLine(const std::string& inputLline, const std::string& terminator,
                                        const std::string& continuator,
-                                       StringBreakingStrategy lineFoldingStrategy)
-    {
+                                       StringBreakingStrategy lineFoldingStrategy) {
         std::vector<std::string> output;
         size_t breakOffset = 0;
         size_t currentLineStart = 0;
@@ -104,20 +99,14 @@ namespace
         {
             size_t nextLineStart;
             if (!lineFoldingStrategy(inputLline, currentLineStart, breakOffset, nextLineStart))
-            {
-                return {};
-            }
+            { return {}; }
             std::string part;
             if (currentLineStart != 0)
-            {
-                part = continuator;
-            }
+            { part = continuator; }
             part += inputLline.substr(currentLineStart, breakOffset - currentLineStart);
             if ((part.length() < terminator.length()) ||
                 (part.substr(part.length() - terminator.length()) != terminator))
-            {
-                part += terminator;
-            }
+            { part += terminator; }
             output.push_back(part);
             currentLineStart = breakOffset + 1;
         }
@@ -127,12 +116,10 @@ namespace
 
 namespace MessageHeaders
 {
-    std::ostream& operator<<(std::ostream& stream, const MessageHeaders::HeaderName& name)
-    {
+    std::ostream& operator<<(std::ostream& stream, const MessageHeaders::HeaderName& name) {
         return stream << (std::string)name;
     }
-    bool operator==(const std::string& lhs, const MessageHeaders::HeaderName& rhs)
-    {
+    bool operator==(const std::string& lhs, const MessageHeaders::HeaderName& rhs) {
         return rhs == lhs;
     }
 
@@ -140,24 +127,18 @@ namespace MessageHeaders
 
     MessageHeaders::HeaderName::HeaderName(const std::string& s) : name_(s) {}
 
-    MessageHeaders::HeaderName& MessageHeaders::HeaderName::operator=(const std::string& s)
-    {
+    MessageHeaders::HeaderName& MessageHeaders::HeaderName::operator=(const std::string& s) {
         name_ = s;
         return *this;
     }
 
-    bool MessageHeaders::HeaderName::operator==(const HeaderName& rhs) const
-    {
+    bool MessageHeaders::HeaderName::operator==(const HeaderName& rhs) const {
         if (name_.length() != rhs.name_.length())
-        {
-            return false;
-        };
+        { return false; };
         for (size_t i = 0; i < name_.length(); ++i)
         {
             if ((tolower(name_[i])) != (tolower(rhs.name_[i])))
-            {
-                return false;
-            }
+            { return false; }
         }
         return true;
     }
@@ -173,9 +154,7 @@ namespace MessageHeaders
      */
 
     MessageHeaders::Header::Header(const HeaderName& newName, const HeaderValue& newValue) :
-        name(newName), value(newValue)
-    {
-    }
+        name(newName), value(newValue) {}
 
     struct MessageHeaders::Impl
     {
@@ -206,11 +185,11 @@ namespace MessageHeaders
          *      which can be used once to fold a header line
          *      is returned.
          */
-        StringBreakingStrategy MakeHeaderLineFoldingStrategy()
-        {
+        StringBreakingStrategy MakeHeaderLineFoldingStrategy() {
             auto firstPart = std::make_shared<bool>(true);
             return [this, firstPart](const std::string& s, size_t startOffset, size_t& breakOffset,
-                                     size_t& nextOffset) {
+                                     size_t& nextOffset)
+            {
                 if (s.length() - startOffset <= lineLengthLimit)
                 {
                     breakOffset = nextOffset = s.length();
@@ -226,11 +205,8 @@ namespace MessageHeaders
                         if (*firstPart)
                         {
                             *firstPart = false;
-                        }
-                        else
-                        {
-                            breakOffset = i;
-                        }
+                        } else
+                        { breakOffset = i; }
                     }
                 }
                 nextOffset = breakOffset + 1;
@@ -246,8 +222,8 @@ namespace MessageHeaders
 
     MessageHeaders::MessageHeaders() : impl_(new Impl) {}
 
-    auto MessageHeaders::ParseRawMessage(const std::string& rawMessage, size_t& bodyOffset) -> State
-    {
+    auto MessageHeaders::ParseRawMessage(const std::string& rawMessage, size_t& bodyOffset)
+        -> State {
         bodyOffset = 0;
         size_t offset = 0;
         while (offset < rawMessage.length())
@@ -294,9 +270,7 @@ namespace MessageHeaders
             for (auto c : name)
             {
                 if ((c < 33) || (c > 126))
-                {
-                    impl_->valid = false;
-                }
+                { impl_->valid = false; }
             }
             value = StripMarginWhitespace(
                 rawMessage.substr(nameValueDelimiter + 1, lineTerminator - nameValueDelimiter - 1));
@@ -331,11 +305,8 @@ namespace MessageHeaders
                     value += rawMessage.substr(firstNonWhiteSpaceInNextLine, nextLineLength);
                     offset = nextLineTerminator + 2;
                     lineTerminator = nextLineTerminator;
-                }
-                else
-                {
-                    break;
-                }
+                } else
+                { break; }
             }
             // Remove any whitespace that might be at te beginning
             // or end of the header value, and then store the header.
@@ -344,34 +315,27 @@ namespace MessageHeaders
         }
         bodyOffset = offset;
         if (offset == 0)
-        {
-            return State::Incomplete;
-        }
+        { return State::Incomplete; }
         return State::Complete;
     }
 
-    auto MessageHeaders::ParseRawMessage(const std::string& rawMessageString) -> State
-    {
+    auto MessageHeaders::ParseRawMessage(const std::string& rawMessageString) -> State {
         size_t bodyOffset;
         return ParseRawMessage(rawMessageString, bodyOffset);
     }
 
     auto MessageHeaders::GetAll() const -> Headers { return impl_->headers; }
 
-    bool MessageHeaders::HasHeader(const HeaderName& name) const
-    {
+    bool MessageHeaders::HasHeader(const HeaderName& name) const {
         for (const auto& header : impl_->headers)
         {
             if (header.name == name)
-            {
-                return true;
-            }
+            { return true; }
         }
         return false;
     }
 
-    void MessageHeaders::SetHeader(const HeaderName& name, const HeaderValue& value)
-    {
+    void MessageHeaders::SetHeader(const HeaderName& name, const HeaderValue& value) {
         bool haveSetValues = false;
         for (auto header = impl_->headers.begin(); header != impl_->headers.end();)
         {
@@ -380,32 +344,23 @@ namespace MessageHeaders
                 if (haveSetValues)
                 {
                     header = impl_->headers.erase(header);
-                }
-                else
+                } else
                 {
                     header->value = value;
                     ++header;
                     haveSetValues = true;
                 }
-            }
-            else
-            {
-                ++header;
-            }
+            } else
+            { ++header; }
         }
         if (!haveSetValues)
-        {
-            impl_->headers.emplace_back(name, value);
-        }
+        { impl_->headers.emplace_back(name, value); }
     }
 
     void MessageHeaders::SetHeader(const HeaderName& name, const std::vector<HeaderValue>& values,
-                                   bool oneLine)
-    {
+                                   bool oneLine) {
         if (values.empty())
-        {
-            return;
-        }
+        { return; }
         if (oneLine)
         {
             bool isFirstValue = true;
@@ -415,16 +370,12 @@ namespace MessageHeaders
                 if (isFirstValue)
                 {
                     isFirstValue = false;
-                }
-                else
-                {
-                    compositeValue += ',';
-                }
+                } else
+                { compositeValue += ','; }
                 compositeValue += value;
             }
             SetHeader(name, compositeValue);
-        }
-        else
+        } else
         {
             bool isFirstValue = true;
             for (const auto& value : values)
@@ -433,27 +384,20 @@ namespace MessageHeaders
                 {
                     isFirstValue = false;
                     SetHeader(name, value);
-                }
-                else
-                {
-                    AddHeader(name, value);
-                }
+                } else
+                { AddHeader(name, value); }
             }
         }
     }
 
-    void MessageHeaders::AddHeader(const HeaderName& name, const HeaderValue& value)
-    {
+    void MessageHeaders::AddHeader(const HeaderName& name, const HeaderValue& value) {
         impl_->headers.emplace_back(name, value);
     }
 
     void MessageHeaders::AddHeader(const HeaderName& name, const std::vector<HeaderValue>& values,
-                                   bool oneLine)
-    {
+                                   bool oneLine) {
         if (values.empty())
-        {
-            return;
-        }
+        { return; }
         if (oneLine)
         {
             bool isFirstValue = true;
@@ -463,67 +407,50 @@ namespace MessageHeaders
                 if (isFirstValue)
                 {
                     isFirstValue = false;
-                }
-                else
-                {
-                    compositeValue += ',';
-                }
+                } else
+                { compositeValue += ','; }
                 compositeValue += value;
             }
             AddHeader(name, compositeValue);
-        }
-        else
+        } else
         {
             bool isFirstValue = true;
             for (const auto& value : values)
-            {
-                AddHeader(name, value);
-            }
+            { AddHeader(name, value); }
         }
     }
-    void MessageHeaders::RemoveHeader(const HeaderName& headerName)
-    {
+    void MessageHeaders::RemoveHeader(const HeaderName& headerName) {
         for (auto header = impl_->headers.begin(); header != impl_->headers.end();)
         {
             if (header->name == headerName)
             {
                 header = impl_->headers.erase(header);
-            }
-            else
-            {
-                ++header;
-            }
+            } else
+            { ++header; }
         }
     }
-    auto MessageHeaders::GetHeaderValue(const HeaderName& headerName) const -> HeaderValue
-    {
+    auto MessageHeaders::GetHeaderValue(const HeaderName& headerName) const -> HeaderValue {
         for (const auto& header : impl_->headers)
         {
             if (header.name == headerName)
-            {
-                return header.value;
-            }
+            { return header.value; }
         }
         return "";
     }
 
     auto MessageHeaders::GetHeaderMultiValues(const HeaderName& headerName) const
-        -> std::vector<HeaderValue>
-    {
+        -> std::vector<HeaderValue> {
         std::vector<HeaderValue> headerValues;
         for (const auto& header : impl_->headers)
         {
             if (header.name == headerName)
-            {
-                headerValues.push_back(header.value);
-            }
+            { headerValues.push_back(header.value); }
         }
         return headerValues;
     }
 
     auto MessageHeaders::GetHeaderTokens(const HeaderName& headerName) const
-        -> std::vector<HeaderValue>
-    {
+        -> std::vector<HeaderValue> {
         std::vector<HeaderValue> headerTokens;
         for (const auto& header : impl_->headers)
         {
@@ -536,8 +463,7 @@ namespace MessageHeaders
         return headerTokens;
     }
 
-    std::string MessageHeaders::GenerateRawHeaders() const
-    {
+    std::string MessageHeaders::GenerateRawHeaders() const {
         std::ostringstream rawMessage;
         for (const auto& header : impl_->headers)
         {
@@ -547,47 +473,36 @@ namespace MessageHeaders
             {
                 for (const auto& part :
                      SplitLine(lineBuffer.str(), CRLF, " ", impl_->MakeHeaderLineFoldingStrategy()))
-                {
-                    rawMessage << part;
-                }
-            }
-            else
-            {
-                rawMessage << lineBuffer.str();
-            }
+                { rawMessage << part; }
+            } else
+            { rawMessage << lineBuffer.str(); }
         }
         rawMessage << CRLF;
         return rawMessage.str();
     }
 
-    void MessageHeaders::SetLineLimit(size_t lineLengthLimit)
-    {
+    void MessageHeaders::SetLineLimit(size_t lineLengthLimit) {
         impl_->lineLengthLimit = lineLengthLimit;
     }
 
     bool MessageHeaders::IsValid() const { return impl_->valid; }
 
-    void PrintTo(const MessageHeaders::State& state, std::ostream* os)
-    {
+    void PrintTo(const MessageHeaders::State& state, std::ostream* os) {
         switch (state)
         {
-        case MessageHeaders::State::Complete:
-        {
+        case MessageHeaders::State::Complete: {
             *os << "Complete";
         }
         break;
-        case MessageHeaders::State::Incomplete:
-        {
+        case MessageHeaders::State::Incomplete: {
             *os << "Incomplete";
         }
         break;
-        case MessageHeaders::State::Error:
-        {
+        case MessageHeaders::State::Error: {
             *os << "Error";
         }
         break;
-        default:
-        {
+        default: {
             *os << "???";
         }
         }
