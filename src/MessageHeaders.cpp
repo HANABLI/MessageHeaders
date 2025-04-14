@@ -112,6 +112,23 @@ namespace
         }
         return output;
     }
+
+    void SplitTokens(const std::string& s, std::vector<std::string>& tokens) {
+        auto remainder = StripMarginWhitespace(StringUtils::NormalizeCaseInsensitiveString(s));
+        while (!remainder.empty())
+        {
+            auto delimiter = remainder.find_first_of(',');
+            if (delimiter == std::string::npos)
+            {
+                tokens.push_back(remainder);
+                remainder.clear();
+            } else
+            {
+                tokens.push_back(StripMarginWhitespace(remainder.substr(0, delimiter)));
+                remainder = StripMarginWhitespace(remainder.substr(delimiter + 1));
+            }
+        }
+    }
 }  // namespace
 
 namespace MessageHeaders
@@ -452,14 +469,9 @@ namespace MessageHeaders
     auto MessageHeaders::GetHeaderTokens(const HeaderName& headerName) const
         -> std::vector<HeaderValue> {
         std::vector<HeaderValue> headerTokens;
-        for (const auto& header : impl_->headers)
-        {
-            if (header.name == headerName)
-            {
-                auto tokens = StringUtils::Split(header.value, ",");
-                headerTokens.insert(headerTokens.end(), tokens.begin(), tokens.end());
-            }
-        }
+        for (const auto& headerGroup : GetHeaderMultiValues(headerName))
+        { SplitTokens(headerGroup, headerTokens); }
+
         return headerTokens;
     }
 

@@ -537,3 +537,16 @@ TEST(MessageHeadersTests, GetValueOfPresentHeader) {
     ASSERT_TRUE(headers.IsValid());
     ASSERT_EQ("www.example.com", headers.GetHeaderValue("Host"));
 }
+
+TEST(MessageHeadersTests, MessageHeaders_GetHeaderTokens_Test) {
+    const std::string rawMessage =
+        ("Foo: bar, Spam, ToTo\r\n"
+         "Bar: foO\r\n"
+         "Spam: \t, \r\n"
+         "\r\n");
+    MessageHeaders::MessageHeaders headers;
+    ASSERT_EQ(MessageHeaders::MessageHeaders::State::Complete, headers.ParseRawMessage(rawMessage));
+    ASSERT_EQ((std::vector<std::string>{"bar", "spam", "toto"}), headers.GetHeaderTokens("Foo"));
+    ASSERT_EQ((std::vector<std::string>{"foo"}), headers.GetHeaderTokens("Bar"));
+    ASSERT_EQ((std::vector<std::string>{""}), headers.GetHeaderTokens("Spam"));
+}
