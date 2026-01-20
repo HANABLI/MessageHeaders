@@ -352,6 +352,17 @@ namespace MessageHeaders
         return false;
     }
 
+    bool MessageHeaders::HasHeaderToken(const HeaderName& headerName,
+                                        const HeaderValue& token) const {
+        const auto lowerCaseHeader = StringUtils::Tolower(token);
+        for (const auto tokenInHeader : GetHeaderTokens(headerName))
+        {
+            if (tokenInHeader == lowerCaseHeader)
+            { return true; }
+        }
+        return false;
+    }
+
     void MessageHeaders::SetHeader(const HeaderName& name, const HeaderValue& value) {
         bool haveSetValues = false;
         for (auto header = impl_->headers.begin(); header != impl_->headers.end();)

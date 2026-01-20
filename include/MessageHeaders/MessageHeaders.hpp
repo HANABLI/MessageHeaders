@@ -274,6 +274,15 @@ namespace MessageHeaders
          *      a Header.
          */
         bool HasHeader(const HeaderName& headerName) const;
+        /**
+         * This method returns an indication of whether or not the header with the given
+         * name in the message contains the given token.
+         *
+         * @param[in] headerName
+         *      This is the header name to check if it's present in the message.
+         *
+         */
+        bool HasHeaderToken(const HeaderName& headerName, const HeaderValue& tocken) const;
 
         /**
          * This method returns the value for the header with the given

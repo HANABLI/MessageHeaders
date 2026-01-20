@@ -550,3 +550,14 @@ TEST(MessageHeadersTests, MessageHeaders_GetHeaderTokens_Test) {
     ASSERT_EQ((std::vector<std::string>{"foo"}), headers.GetHeaderTokens("Bar"));
     ASSERT_EQ((std::vector<std::string>{""}), headers.GetHeaderTokens("Spam"));
 }
+
+TEST(MessageHeadersTests, MessageHeaders_HasHeaderToken_Test) {
+    const std::string rawMessage =
+        ("HeaderToken: token1, token2, testHeaderToken\r\n"
+         "Foo: foo\r\n"
+         "Bar: bar\r\n"
+         "\r\n");
+    MessageHeaders::MessageHeaders headers;
+    ASSERT_EQ(MessageHeaders::MessageHeaders::State::Complete, headers.ParseRawMessage(rawMessage));
+    ASSERT_TRUE(headers.HasHeaderToken("HeaderToken", "testHeaderToken"));
+}
