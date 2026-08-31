@@ -233,7 +233,11 @@ namespace MessageHeaders
     };
 
     MessageHeaders::~MessageHeaders() = default;
-
+    MessageHeaders& MessageHeaders::operator=(const MessageHeaders& other) {
+        if (this != &other)
+        { *impl_ = *other.impl_; }
+        return *this;
+    }
     MessageHeaders::MessageHeaders(MessageHeaders&&) = default;
     MessageHeaders& MessageHeaders::operator=(MessageHeaders&&) = default;
 

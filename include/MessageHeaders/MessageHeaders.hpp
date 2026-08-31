@@ -183,9 +183,9 @@ namespace MessageHeaders
         // resources
         MessageHeaders(MessageHeaders&&);  // Move Constructor that transfers resources from an
                                            // expiring object to a newly constructed object.
-        MessageHeaders& operator=(const MessageHeaders&) =
-            delete;  // Copy Assignment Operation That assigns the values of one object to another
-                     // object using the assignment operator (=)
+        MessageHeaders& operator=(
+            const MessageHeaders&);  // Copy Assignment Operation That assigns the values of one
+                                     // object to another object using the assignment operator (=)
         MessageHeaders& operator=(
             MessageHeaders&&);  // Move Assignment Operator: Amove assignment operator efficiently
                                 // transfers resources from one object to another.
